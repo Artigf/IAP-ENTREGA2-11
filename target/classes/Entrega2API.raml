@@ -1,2 +1,144 @@
 #%RAML 1.0
-title: Entres2 API
+title:  ExpedientesREST
+description: REST del entregable 2
+version: v1
+
+baseUri: http://localhost:8081
+
+mediaType:
+  - application/json
+  - application/xml
+protocols:
+  - HTTP
+  
+# # # # # # # # #
+# TIPOS DE DATOS
+# # # # # # # # #
+types:
+  Alumno:
+    type: object
+    properties:
+       dni: string
+       nombre: string
+       apellidos: string
+  
+  Asignatura:
+    type: object
+    properties:
+      id: string
+      acronimo: string
+      anyo: integer
+       
+  Expediente:
+    type: object
+    properties:
+      dni: string
+      nombre: string
+      apellidos: string
+      direccion: integer
+      asignaturas:
+      type: array
+      items:
+        type: object
+        properties:
+          id: integer
+          acronimo: string
+          anio: integer
+          nota: number
+
+  DetallesAsignatura:
+    type: object
+    properties:
+      id: integer
+      acronimo: string
+      nombre: string
+      anio: integer
+      creditos: integer
+      cuatrimestre: string
+      alumnos:
+        type: array
+        items:
+          type: object
+          properties:
+            dni: string
+            nombre: string
+            apellidos: string
+      profesores:
+        type: array
+        items:
+          type: object
+          properties:
+            dni: string
+            nombre: string
+            apellidos: string
+
+# # # # # # # # #
+# RECURSOS
+# # # # # # # # #
+
+/alumnos:
+  get:
+    description: Recupera el listado de alumnos
+    responses:
+      200:
+        body:
+          type: Alumno[]
+
+/asignaturas:
+  get:
+    description: Recupera el listado de asignaturas
+    queryParameters:
+      año:
+        description: Año para filtrar las asignaturas
+        type: integer
+        required: false
+    responses:
+      200:
+        body:
+          type: Asignatura[]
+
+/{dni}:
+  get:
+    description: Recupera el expediente de un alumno
+    responses:
+      200:
+        body:
+          type: Expediente
+          
+/{id}:
+  get:
+    description: Recupera los detalles de una asignatura
+    responses:
+      200:
+        body:
+          type: DetallesAsignatura
+          
+/nota:
+  put:
+    description: Inserta o actualiza la nota final de un alumno para una asignatura.
+    body:
+      application/json:
+        type: object
+        properties:
+          dni: string
+          idAsignatura: string
+          nota: number
+    responses:
+      200:
+        description: Nota actualizada correctamente.
+      400:
+        description: Error en los datos enviados.
+  delete:
+      description: Borra la nota final de un alumno en una asignatura, poniendo el valor a null.
+      body:
+        application/json:
+          type: object
+          properties:
+            dni: string
+            idAsignatura: string
+      responses:
+        200:
+          description: Nota borrada correctamente.
+        400:
+          description: Error en los datos enviados.
+            
