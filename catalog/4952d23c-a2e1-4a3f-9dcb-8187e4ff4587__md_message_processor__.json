@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "AcNota"
+        }
+    },
+    "id": "4952d23c-a2e1-4a3f-9dcb-8187e4ff4587",
+    "version": "5.2.0.0"
+}

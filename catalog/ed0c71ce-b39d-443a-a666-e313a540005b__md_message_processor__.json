@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "DelNota"
+        }
+    },
+    "id": "ed0c71ce-b39d-443a-a666-e313a540005b",
+    "version": "5.2.0.0"
+}

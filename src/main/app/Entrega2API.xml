@@ -1,62 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
-    <http:listener-config name="Entrega2API-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="Entrega2API-config" raml="Entrega2API.raml" consoleEnabled="false" doc:name="Router"/>
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="Entrega2API-httpListenerConfig" host="localhost" port="8081" doc:name="HTTP Listener Configuration" />
+    <apikit:config name="Entrega2API-config" raml="Entrega2API.raml" consoleEnabled="false" doc:name="Router" />
+    <db:mysql-config name="MySQL_Configuration" host="localhost" port="3306" user="root" database="centroeducativo" doc:name="MySQL Configuration" />
     <flow name="Entrega2API-main">
-        <http:listener config-ref="Entrega2API-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
-        <apikit:router config-ref="Entrega2API-config" doc:name="APIkit Router"/>
-        <exception-strategy ref="Entrega2API-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+        <http:listener config-ref="Entrega2API-httpListenerConfig" path="/*" doc:name="HTTP" />
+        <apikit:router config-ref="Entrega2API-config" doc:name="APIkit Router" />
+        <exception-strategy ref="Entrega2API-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
     </flow>
     <flow name="Entrega2API-console">
-        <http:listener config-ref="Entrega2API-httpListenerConfig" path="/console/*" doc:name="HTTP"/>
-        <apikit:console config-ref="Entrega2API-config" doc:name="APIkit Console"/>
+        <http:listener config-ref="Entrega2API-httpListenerConfig" path="/console/*" doc:name="HTTP" />
+        <apikit:console config-ref="Entrega2API-config" doc:name="APIkit Console" />
     </flow>
     <flow name="put:/nota:application/json:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+		<dw:transform-message doc:name="Transform Message" metadata:id="4952d23c-a2e1-4a3f-9dcb-8187e4ff4587">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+	dni: payload.dni,
+	idAsignatura: payload.idAsignatura,
+	nota: payload.nota
+}]]></dw:set-payload>
+		</dw:transform-message>
+		<db:update config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[UPDATE alumno_asignatura SET alumno=#[payload.dni],asignatura=#[payload.idAsignatura],nota=#[payload.nota] where alumno=#[payload.dni]]]></db:parameterized-query>
+		</db:update>
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
     </flow>
     <flow name="delete:/nota:application/json:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+		<dw:transform-message doc:name="Transform Message" metadata:id="ed0c71ce-b39d-443a-a666-e313a540005b">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+payload]]></dw:set-payload>
+		</dw:transform-message>
+		<db:delete config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[DELETE nota FROM `alumno_asignatura` WHERE alumno=#[payload.dni]]]></db:parameterized-query>
+		</db:delete>
+        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
     </flow>
     <flow name="get:/alumnos:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <db:select config-ref="MySQL_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[Select * from alumnos]]></db:parameterized-query>
+        </db:select>
+        <json:object-to-json-transformer doc:name="Object to JSON" />
     </flow>
     <flow name="get:/asignaturas:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+        <db:select config-ref="MySQL_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[Select * from asignaturas]]></db:parameterized-query>
+        </db:select>
+        <json:object-to-json-transformer doc:name="Object to JSON" />
     </flow>
-    <flow name="get:/{dni}:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+
+    <flow name="get:/alumnos/{dni}:Entrega2API-config">
+		<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[Select * from alumnos where dni=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
+		</db:select>
+		<json:object-to-json-transformer doc:name="Object to JSON"/>
+
     </flow>
-    <flow name="get:/{id}:Entrega2API-config">
-        <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload"/>
+    <flow name="get:/asignaturas/{id}:Entrega2API-config">
+		<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:parameterized-query><![CDATA[Select * from asignaturas where id_asig=#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
+		</db:select>
+		<json:object-to-json-transformer doc:name="Object to JSON"/>
+
     </flow>
     <apikit:mapping-exception-strategy name="Entrega2API-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="405">
             <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="415">
             <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="406">
             <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="400">
             <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
     </apikit:mapping-exception-strategy>
 </mule>

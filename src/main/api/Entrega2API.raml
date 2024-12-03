@@ -83,6 +83,14 @@ types:
       200:
         body:
           type: Alumno[]
+          
+  /{dni}:
+    get:
+      description: Recupera el expediente de un alumno
+      responses:
+        200:
+          body:
+            type: Expediente
 
 /asignaturas:
   get:
@@ -96,22 +104,14 @@ types:
       200:
         body:
           type: Asignatura[]
-
-/{dni}:
-  get:
-    description: Recupera el expediente de un alumno
-    responses:
-      200:
-        body:
-          type: Expediente
-          
-/{id}:
-  get:
-    description: Recupera los detalles de una asignatura
-    responses:
-      200:
-        body:
-          type: DetallesAsignatura
+           
+  /{id}:
+    get:
+      description: Recupera los detalles de una asignatura
+      responses:
+        200:
+          body:
+            type: DetallesAsignatura
           
 /nota:
   put:
