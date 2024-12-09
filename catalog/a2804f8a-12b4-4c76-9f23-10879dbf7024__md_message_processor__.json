@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "ListaAsignaturasXML"
+        }
+    },
+    "id": "a2804f8a-12b4-4c76-9f23-10879dbf7024",
+    "version": "5.2.0.0"
+}

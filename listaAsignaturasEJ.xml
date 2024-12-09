@@ -1,0 +1,12 @@
+<asignaturas>
+	<asignatura>
+		<id>abab</id>
+		<acronimo>ba</acronimo>
+		<anyo>2022</anyo>
+	</asignatura>
+	<asignatura>
+		<id>acac</id>
+		<acronimo>ca</acronimo>
+		<anyo>2023</anyo>
+	</asignatura>
+</asignaturas>
