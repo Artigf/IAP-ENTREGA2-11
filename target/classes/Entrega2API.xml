@@ -48,10 +48,34 @@ payload]]></dw:set-payload>
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
     </flow>
     <flow name="get:/alumnos:Entrega2API-config">
+		<set-variable variableName="accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
         <db:select config-ref="MySQL_Configuration" doc:name="Database">
             <db:parameterized-query><![CDATA[Select * from alumnos]]></db:parameterized-query>
         </db:select>
-        <json:object-to-json-transformer doc:name="Object to JSON" />
+		<choice doc:name="Choice">
+			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
+				<json:object-to-json-transformer doc:name="Object to JSON"/>
+			</when>
+			<otherwise>
+				<dw:transform-message doc:name="Transform Message" metadata:id="bff2b5f9-d995-4678-91ed-3ecd77872e56">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	alumnos: {
+		(payload map ((payload01 , indexOfPayload01) -> {
+			alumno: {
+				apellidos: payload01.apellidos,
+				nombre: payload01.nombre,
+				dni: payload01.dni
+			}
+		}))
+	}
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+
     </flow>
     <flow name="get:/asignaturas:Entrega2API-config">
         <db:select config-ref="MySQL_Configuration" doc:name="Database">

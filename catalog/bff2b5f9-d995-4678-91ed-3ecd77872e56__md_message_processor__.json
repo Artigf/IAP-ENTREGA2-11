@@ -1,0 +1,11 @@
+{
+    "inputMessageMetadata": {},
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "ListaAlumnosXML"
+        }
+    },
+    "id": "bff2b5f9-d995-4678-91ed-3ecd77872e56",
+    "version": "5.2.0.0"
+}

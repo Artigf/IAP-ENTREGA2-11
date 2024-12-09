@@ -1,0 +1,12 @@
+<alumnos>
+	<alumno>
+		<apellidos>Galisteo Forrat</apellidos>
+		<nombre>Carlos</nombre>
+		<dni>ded33</dni>
+	</alumno>
+	<alumno>
+		<apellidos>Roncales Bort</apellidos>
+		<nombre>Enrique</nombre>
+		<dni>ded34</dni>
+	</alumno>
+</alumnos>
