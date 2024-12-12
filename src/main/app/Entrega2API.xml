@@ -144,14 +144,36 @@ payload]]></dw:set-payload>
 		<db:select config-ref="MySQL_Configuration" doc:name="Database">
 			<db:parameterized-query><![CDATA[Select * from alumnos where dni=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
 		</db:select>
+
 		<json:object-to-json-transformer doc:name="Object to JSON"/>
 
     </flow>
     <flow name="get:/asignaturas/{id}:Entrega2API-config">
-		<db:select config-ref="MySQL_Configuration" doc:name="Database">
-			<db:parameterized-query><![CDATA[Select * from asignaturas where id_asig=#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
-		</db:select>
-		<json:object-to-json-transformer doc:name="Object to JSON"/>
+		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
+		<scatter-gather doc:name="Scatter-Gather">
+			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:parameterized-query><![CDATA[Select * from asignaturas where id_asig=#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
+			</db:select>
+			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:parameterized-query><![CDATA[Select A.* from alumnos A, alumno_asignatura S where A.dni = S.alumno and S.asignatura =#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
+			</db:select>
+			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:parameterized-query><![CDATA[Select P.* from profesores P, profesor_asignatura S where P.dni = S.profesor and S.asignatura =#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
+			</db:select>
+		</scatter-gather>
+		<choice doc:name="Choice">
+			<otherwise>
+				<json:object-to-json-transformer doc:name="Object to JSON"/>
+				<dw:transform-message doc:name="Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+{
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+
 
     </flow>
     <apikit:mapping-exception-strategy name="Entrega2API-apiKitGlobalExceptionMapping">

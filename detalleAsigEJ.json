@@ -1,0 +1,40 @@
+{
+  "asignatura": {
+    "id_asig": "DCU.2020",
+    "nombre": "Desarrollo Centrado en el Usuario",
+    "acronimo": "DCU",
+    "anyo": 2020,
+    "curso": 4,
+    "creditos": 5,
+    "cuatrimestre": "A"
+  },
+  "alumnos": [
+    {
+      "nombre": "Pepe",
+      "apellidos": "Garcia Sanchez",
+      "dni": "12345678W"
+    },
+    {
+      "nombre": "Maria",
+      "apellidos": "Fernandez Gómez",
+      "dni": "23456387R"
+    },
+    {
+      "nombre": "Miguel",
+      "apellidos": "Hernandez Llopis",
+      "dni": "34567891F"
+    }
+  ],
+  "profesores": [
+    {
+      "nombre": "Manoli",
+      "apellidos": "Albert",
+      "dni": "06374291A"
+    },
+    {
+      "nombre": "Pedro",
+      "apellidos": "Valderas",
+      "dni": "10293756L"
+    }
+  ]
+}
