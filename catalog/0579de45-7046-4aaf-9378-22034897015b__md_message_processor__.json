@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "DetalleAsigPREVJSON"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "XMLPrev"
+        }
+    },
+    "id": "0579de45-7046-4aaf-9378-22034897015b",
+    "version": "5.2.0.0"
+}

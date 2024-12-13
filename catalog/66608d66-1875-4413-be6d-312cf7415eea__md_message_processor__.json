@@ -1,0 +1,16 @@
+{
+    "inputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "PrevAlumn"
+        }
+    },
+    "outputMessageMetadata": {
+        "messagePayload": {
+            "connectorName": "#_custom_mule_metadata_type_#",
+            "typeId": "DetAlmunoEjXML"
+        }
+    },
+    "id": "66608d66-1875-4413-be6d-312cf7415eea",
+    "version": "5.2.0.0"
+}

@@ -10,6 +10,7 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <http:listener-config name="Entrega2API-httpListenerConfig" host="localhost" port="8081" doc:name="HTTP Listener Configuration" />
     <apikit:config name="Entrega2API-config" raml="Entrega2API.raml" consoleEnabled="false" doc:name="Router" />
     <db:mysql-config name="MySQL_Configuration" host="localhost" port="3306" user="root" database="centroeducativo" doc:name="MySQL Configuration" />
+	<http:request-config name="HTTP_Request_Configuration" host="pedvalar.webs.upv.es" port="80" doc:name="HTTP Request Configuration"/>
     <flow name="Entrega2API-main">
         <http:listener config-ref="Entrega2API-httpListenerConfig" path="/*" doc:name="HTTP" />
         <apikit:router config-ref="Entrega2API-config" doc:name="APIkit Router" />
@@ -141,11 +142,81 @@ payload]]></dw:set-payload>
     </flow>
 
     <flow name="get:/alumnos/{dni}:Entrega2API-config">
-		<db:select config-ref="MySQL_Configuration" doc:name="Database">
-			<db:parameterized-query><![CDATA[Select * from alumnos where dni=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
-		</db:select>
+		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
+		<scatter-gather doc:name="Scatter-Gather">
+			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:parameterized-query><![CDATA[Select * from alumnos where dni=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
+			</db:select>
+			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:parameterized-query><![CDATA[Select asignatura, nota from alumno_asignatura where alumno=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
+			</db:select>
+			<processor-chain>
+				<http:request config-ref="HTTP_Request_Configuration" path="/iap/gva/rest/direccion/{dni}" method="GET" doc:name="HTTP">
+					<http:request-builder>
+						<http:uri-param paramName="dni" value="#[message.inboundProperties.'http.uri.params'.dni]"/>
+						<http:header headerName="accept" value="application/json"/>
+					</http:request-builder>
+				</http:request>
+				<dw:transform-message doc:name="Transform Message" metadata:id="0779930a-4e21-4fb1-bb9c-d7b331044b3b">
+					<dw:input-payload mimeType="application/json"/>
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+{
+	codigoPostal: payload.codigoPostal,
+	ciudad: payload.ciudad,
+	direccion: payload.direccion
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</processor-chain>
+		</scatter-gather>
+		<dw:transform-message doc:name="Transform Message">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
 
-		<json:object-to-json-transformer doc:name="Object to JSON"/>
+{
+  "Alumno": payload[0],
+  "notas": payload[1],
+  "dirección": payload[2]
+}]]></dw:set-payload>
+		</dw:transform-message>
+		<choice doc:name="Choice">
+			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
+				<set-payload value="#[payload]" doc:name="Set Payload"/>
+			</when>
+			<otherwise>
+				<dw:transform-message doc:name="Transform Message" metadata:id="66608d66-1875-4413-be6d-312cf7415eea">
+					<dw:input-payload mimeType="application/json"/>
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	Alumno: {
+		datosPersonales: {
+			apellidos: payload.Alumno.apellidos,
+			nombre: payload.Alumno.nombre,
+			dni: payload.Alumno.dni
+		},
+		notas: {
+			(payload.notas map ((nota , indexOfNota) -> {
+				nota: {
+					valor: nota.nota,
+					asignatura: nota.asignatura
+				}
+			}))
+		},
+		direccion: {
+			codigoPostal: payload.direccion.codigoPostal as :number,
+			ciudad: payload.direccion.ciudad,
+			direccion: payload.direccion.direccion
+		}
+	}
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</otherwise>
+		</choice>
+
 
     </flow>
     <flow name="get:/asignaturas/{id}:Entrega2API-config">
@@ -162,13 +233,64 @@ payload]]></dw:set-payload>
 			</db:select>
 		</scatter-gather>
 		<choice doc:name="Choice">
-			<otherwise>
-				<json:object-to-json-transformer doc:name="Object to JSON"/>
+			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
 				<dw:transform-message doc:name="Transform Message">
 					<dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
+
 {
+  "detalles-asignatura": payload[0][0],
+  "alumnos": payload[1],
+  "profesores": payload[2]
+}]]></dw:set-payload>
+				</dw:transform-message>
+			</when>
+			<otherwise>
+				<dw:transform-message doc:name="Copy_of_Transform Message">
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+
+{
+  "detalles-asignatura": payload[0][0],
+  "alumnos": payload[1],
+  "profesores": payload[2]
+}]]></dw:set-payload>
+				</dw:transform-message>
+				<dw:transform-message doc:name="Transform Message" metadata:id="0579de45-7046-4aaf-9378-22034897015b">
+					<dw:input-payload mimeType="application/json"/>
+					<dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+---
+{
+	detalles-asignatura: {
+		creditos: payload.detalles-asignatura.creditos,
+		nombre: payload.detalles-asignatura.nombre,
+		cuatrimestre: payload.detalles-asignatura.cuatrimestre,
+		id_asig: payload.detalles-asignatura.id_asig,
+		acronimo: payload.detalles-asignatura.acronimo,
+		anyo: payload.detalles-asignatura.anyo,
+		curso: payload.detalles-asignatura.curso,
+		alumnos: {
+			(payload.alumnos map ((alumno , indexOfAlumno) -> {
+				alumno: {
+					apellidos: alumno.apellidos,
+					nombre: alumno.nombre,
+					dni: alumno.dni
+				}
+			}))
+		},
+		profesores: {
+			(payload.profesores map ((profesore , indexOfProfesore) -> {
+				profesor: {
+					apellidos: profesore.apellidos,
+					nombre: profesore.nombre,
+					dni: profesore.dni
+				}
+			}))
+		}
+	}
 }]]></dw:set-payload>
 				</dw:transform-message>
 			</otherwise>
