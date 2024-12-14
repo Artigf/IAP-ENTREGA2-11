@@ -17,7 +17,7 @@
     </metaDataModelPropertiesManager>
     <fields>
       <org.mule.common.metadata.DefaultMetaDataField>
-        <name>dni</name>
+        <name>alumno</name>
         <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
           <implementationClass>java.lang.String</implementationClass>
           <dataType>STRING</dataType>
@@ -46,7 +46,7 @@
         </metaDataFieldPropertyManager>
       </org.mule.common.metadata.DefaultMetaDataField>
       <org.mule.common.metadata.DefaultMetaDataField>
-        <name>idAsignatura</name>
+        <name>asignatura</name>
         <model class="org.mule.common.metadata.DefaultSimpleMetaDataModel">
           <implementationClass>java.lang.String</implementationClass>
           <dataType>STRING</dataType>

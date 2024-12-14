@@ -21,44 +21,46 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
         <apikit:console config-ref="Entrega2API-config" doc:name="APIkit Console" />
     </flow>
     <flow name="put:/nota:application/json:Entrega2API-config">
-		<dw:transform-message doc:name="Transform Message" metadata:id="4952d23c-a2e1-4a3f-9dcb-8187e4ff4587">
+		<dw:transform-message doc:name="JSON-a-Map" metadata:id="4952d23c-a2e1-4a3f-9dcb-8187e4ff4587">
 			<dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 {
-	dni: payload.dni,
-	idAsignatura: payload.idAsignatura,
+	alumno: payload.alumno,
+	asignatura: payload.asignatura,
 	nota: payload.nota
 }]]></dw:set-payload>
 		</dw:transform-message>
-		<db:update config-ref="MySQL_Configuration" doc:name="Database">
-			<db:parameterized-query><![CDATA[UPDATE alumno_asignatura SET nota=#[payload.nota] where alumno=#[payload.dni] and asignatura=#[payload.idAsignatura]]]></db:parameterized-query>
+		<db:update config-ref="MySQL_Configuration" doc:name="Actualizar nota">
+			<db:parameterized-query><![CDATA[UPDATE alumno_asignatura SET nota=#[payload.nota] where alumno=#[payload.alumno] and asignatura=#[payload.asignatura]]]></db:parameterized-query>
+
 		</db:update>
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
     </flow>
     <flow name="delete:/nota:application/json:Entrega2API-config">
-		<dw:transform-message doc:name="Transform Message" metadata:id="ed0c71ce-b39d-443a-a666-e313a540005b">
+		<dw:transform-message doc:name="JSON-a-Map" metadata:id="ed0c71ce-b39d-443a-a666-e313a540005b">
 			<dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
 payload]]></dw:set-payload>
 		</dw:transform-message>
-		<db:update config-ref="MySQL_Configuration" doc:name="Database">
-			<db:parameterized-query><![CDATA[UPDATE alumno_asignatura SET nota=null where alumno=#[payload.dni] and asignatura=#[payload.idAsignatura]]]></db:parameterized-query>
+		<db:update config-ref="MySQL_Configuration" doc:name="Eliminar nota">
+			<db:parameterized-query><![CDATA[UPDATE alumno_asignatura SET nota=null where alumno=#[payload.alumno] and asignatura=#[payload.asignatura]]]></db:parameterized-query>
 		</db:update>
+
         <set-payload value="#[NullPayload.getInstance()]" doc:name="Set Payload" />
     </flow>
     <flow name="get:/alumnos:Entrega2API-config">
-		<set-variable variableName="accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
-        <db:select config-ref="MySQL_Configuration" doc:name="Database">
+		<set-variable variableName="accept" value="#[message.inboundProperties.accept]" doc:name="Accept JSON"/>
+        <db:select config-ref="MySQL_Configuration" doc:name="Recopila alumnos">
             <db:parameterized-query><![CDATA[Select * from alumnos]]></db:parameterized-query>
         </db:select>
 		<choice doc:name="Choice">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
-				<json:object-to-json-transformer doc:name="Object to JSON"/>
+				<json:object-to-json-transformer doc:name="Lista alumnos en JSON"/>
 			</when>
 			<otherwise>
-				<dw:transform-message doc:name="Transform Message" metadata:id="bff2b5f9-d995-4678-91ed-3ecd77872e56">
+				<dw:transform-message doc:name="Lista alumnos en XML" metadata:id="bff2b5f9-d995-4678-91ed-3ecd77872e56">
 					<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
@@ -79,18 +81,18 @@ payload]]></dw:set-payload>
 
     </flow>
     <flow name="get:/asignaturas:Entrega2API-config">
-		<set-variable variableName="accept" value="#[message.inboundProperties.accept]" doc:name="Accept Header"/>
-		<choice doc:name="Choice QUERY param">
+		<set-variable variableName="accept" value="#[message.inboundProperties.accept]" doc:name="Accept JSON"/>
+		<choice doc:name="hay o no filtro por a&#241;o">
 			<when expression="#[message.inboundProperties.'http.query.params'.size() == 0]">
-				<db:select config-ref="MySQL_Configuration" doc:name="DatabaseNQ">
+				<db:select config-ref="MySQL_Configuration" doc:name="Recopila asignaturas">
 					<db:parameterized-query><![CDATA[SELECT * FROM asignaturas]]></db:parameterized-query>
 				</db:select>
 				<choice doc:name="Choice XML-JSON">
 					<when expression="#[flowVars.accept==&quot;application/json&quot;]">
-						<json:object-to-json-transformer doc:name="Object to JSON"/>
+						<json:object-to-json-transformer doc:name="Lista asignaturas en JSON"/>
 					</when>
 					<otherwise>
-						<dw:transform-message doc:name="Transform Message" metadata:id="b38f1746-f701-415e-aff8-23d5bab8d3e8">
+						<dw:transform-message doc:name="Lista asignaturas en XML" metadata:id="b38f1746-f701-415e-aff8-23d5bab8d3e8">
 							<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
@@ -110,15 +112,15 @@ payload]]></dw:set-payload>
 				</choice>
 			</when>
 			<otherwise>
-				<db:select config-ref="MySQL_Configuration" doc:name="Database">
+				<db:select config-ref="MySQL_Configuration" doc:name="Recopila asignaturas de un a&#241;o">
 					<db:parameterized-query><![CDATA[SELECT * FROM asignaturas WHERE anyo=#[message.inboundProperties.'http.query.params'.año]]]></db:parameterized-query>
 				</db:select>
 				<choice doc:name="Choice XML-JSON">
 					<when expression="#[flowVars.accept==&quot;application/json&quot;]">
-						<json:object-to-json-transformer doc:name="Object to JSON"/>
+						<json:object-to-json-transformer doc:name="Lista de asignaturas en JSON"/>
 					</when>
 					<otherwise>
-						<dw:transform-message doc:name="Transform Message" metadata:id="a2804f8a-12b4-4c76-9f23-10879dbf7024">
+						<dw:transform-message doc:name="Lista de asignaturas en XML" metadata:id="a2804f8a-12b4-4c76-9f23-10879dbf7024">
 							<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
@@ -142,22 +144,22 @@ payload]]></dw:set-payload>
     </flow>
 
     <flow name="get:/alumnos/{dni}:Entrega2API-config">
-		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
+		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Accept JSON"/>
 		<scatter-gather doc:name="Scatter-Gather">
-			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:select config-ref="MySQL_Configuration" doc:name="Recoge datos alumno">
 				<db:parameterized-query><![CDATA[Select * from alumnos where dni=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
 			</db:select>
-			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:select config-ref="MySQL_Configuration" doc:name="Recoge las asignaturas del alumno">
 				<db:parameterized-query><![CDATA[Select asignatura, nota from alumno_asignatura where alumno=#[message.inboundProperties.'http.uri.params'.dni]]]></db:parameterized-query>
 			</db:select>
 			<processor-chain>
-				<http:request config-ref="HTTP_Request_Configuration" path="/iap/gva/rest/direccion/{dni}" method="GET" doc:name="HTTP">
+				<http:request config-ref="HTTP_Request_Configuration" path="/iap/gva/rest/direccion/{dni}" method="GET" doc:name="Recoge la direcci&#243;n postal">
 					<http:request-builder>
 						<http:uri-param paramName="dni" value="#[message.inboundProperties.'http.uri.params'.dni]"/>
 						<http:header headerName="accept" value="application/json"/>
 					</http:request-builder>
 				</http:request>
-				<dw:transform-message doc:name="Transform Message" metadata:id="0779930a-4e21-4fb1-bb9c-d7b331044b3b">
+				<dw:transform-message doc:name="DP a JSON" metadata:id="0779930a-4e21-4fb1-bb9c-d7b331044b3b">
 					<dw:input-payload mimeType="application/json"/>
 					<dw:set-payload><![CDATA[%dw 1.0
 %output application/json
@@ -170,7 +172,7 @@ payload]]></dw:set-payload>
 				</dw:transform-message>
 			</processor-chain>
 		</scatter-gather>
-		<dw:transform-message doc:name="Transform Message">
+		<dw:transform-message doc:name="Datos a JSON">
 			<dw:set-payload><![CDATA[%dw 1.0
 %output application/java
 ---
@@ -183,17 +185,17 @@ payload]]></dw:set-payload>
 		</dw:transform-message>
 		<choice doc:name="Choice">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
-				<set-payload value="#[payload]" doc:name="Set Payload"/>
+				<set-payload value="#[payload]" doc:name="Muestra el expediente"/>
 			</when>
 			<otherwise>
-				<dw:transform-message doc:name="Transform Message" metadata:id="66608d66-1875-4413-be6d-312cf7415eea">
+				<dw:transform-message doc:name="JSON a expediente en XML" metadata:id="66608d66-1875-4413-be6d-312cf7415eea">
 					<dw:input-payload mimeType="application/json"/>
 					<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml
 ---
 {
-	Alumno: {
-		datosPersonales: {
+	expediente: {
+		Alumno: {
 			apellidos: payload.Alumno.apellidos,
 			nombre: payload.Alumno.nombre,
 			dni: payload.Alumno.dni
@@ -207,7 +209,7 @@ payload]]></dw:set-payload>
 			}))
 		},
 		direccion: {
-			codigoPostal: payload.direccion.codigoPostal as :number,
+			codigoPostal: payload.direccion.codigoPostal,
 			ciudad: payload.direccion.ciudad,
 			direccion: payload.direccion.direccion
 		}
@@ -220,45 +222,35 @@ payload]]></dw:set-payload>
 
     </flow>
     <flow name="get:/asignaturas/{id}:Entrega2API-config">
-		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Variable"/>
+		<set-variable variableName="Accept" value="#[message.inboundProperties.accept]" doc:name="Accept JSON"/>
 		<scatter-gather doc:name="Scatter-Gather">
-			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:select config-ref="MySQL_Configuration" doc:name="Recoge datos de asignatura">
 				<db:parameterized-query><![CDATA[Select * from asignaturas where id_asig=#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
 			</db:select>
-			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:select config-ref="MySQL_Configuration" doc:name="Recoge alumnos de asignatura">
 				<db:parameterized-query><![CDATA[Select A.* from alumnos A, alumno_asignatura S where A.dni = S.alumno and S.asignatura =#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
 			</db:select>
-			<db:select config-ref="MySQL_Configuration" doc:name="Database">
+			<db:select config-ref="MySQL_Configuration" doc:name="Recoge profesores de asignatura">
 				<db:parameterized-query><![CDATA[Select P.* from profesores P, profesor_asignatura S where P.dni = S.profesor and S.asignatura =#[message.inboundProperties.'http.uri.params'.id]]]></db:parameterized-query>
 			</db:select>
 		</scatter-gather>
+		<dw:transform-message doc:name="Datos en JSON">
+			<dw:set-payload><![CDATA[%dw 1.0
+%output application/java
+---
+
+{
+  "detalles-asignatura": payload[0][0],
+  "alumnos": payload[1],
+  "profesores": payload[2]
+}]]></dw:set-payload>
+		</dw:transform-message>
 		<choice doc:name="Choice">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
-				<dw:transform-message doc:name="Transform Message">
-					<dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-
-{
-  "detalles-asignatura": payload[0][0],
-  "alumnos": payload[1],
-  "profesores": payload[2]
-}]]></dw:set-payload>
-				</dw:transform-message>
+				<set-payload value="#[payload]" doc:name="Muestra datos en JSON"/>
 			</when>
 			<otherwise>
-				<dw:transform-message doc:name="Copy_of_Transform Message">
-					<dw:set-payload><![CDATA[%dw 1.0
-%output application/java
----
-
-{
-  "detalles-asignatura": payload[0][0],
-  "alumnos": payload[1],
-  "profesores": payload[2]
-}]]></dw:set-payload>
-				</dw:transform-message>
-				<dw:transform-message doc:name="Transform Message" metadata:id="0579de45-7046-4aaf-9378-22034897015b">
+				<dw:transform-message doc:name="Datos de JSON a XML" metadata:id="0579de45-7046-4aaf-9378-22034897015b">
 					<dw:input-payload mimeType="application/json"/>
 					<dw:set-payload><![CDATA[%dw 1.0
 %output application/xml

@@ -115,13 +115,13 @@ types:
           
 /nota:
   put:
-    description: Inserta o actualiza la nota final de un alumno para una asignatura.
+    description: Inserta o actualiza la nota final de un alumno para una asignatura. Enviar un JSON con alumno,asignatura y nota 
     body:
       application/json:
         type: object
         properties:
-          dni: string
-          idAsignatura: string
+          alumno: string
+          asignatura: string
           nota: number
     responses:
       200:
@@ -129,13 +129,13 @@ types:
       400:
         description: Error en los datos enviados.
   delete:
-      description: Borra la nota final de un alumno en una asignatura, poniendo el valor a null.
+      description: Borra la nota final de un alumno en una asignatura, poniendo el valor a null. Enviar un JSON con alumno y asignatura
       body:
         application/json:
           type: object
           properties:
-            dni: string
-            idAsignatura: string
+            alumno: string
+            asignatura: string
       responses:
         200:
           description: Nota borrada correctamente.
