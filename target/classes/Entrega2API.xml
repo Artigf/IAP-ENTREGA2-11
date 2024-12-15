@@ -55,7 +55,7 @@ payload]]></dw:set-payload>
         <db:select config-ref="MySQL_Configuration" doc:name="Recopila alumnos">
             <db:parameterized-query><![CDATA[Select * from alumnos]]></db:parameterized-query>
         </db:select>
-		<choice doc:name="Choice">
+		<choice doc:name="Choice XML-JSON">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
 				<json:object-to-json-transformer doc:name="Lista alumnos en JSON"/>
 			</when>
@@ -113,7 +113,8 @@ payload]]></dw:set-payload>
 			</when>
 			<otherwise>
 				<db:select config-ref="MySQL_Configuration" doc:name="Recopila asignaturas de un a&#241;o">
-					<db:parameterized-query><![CDATA[SELECT * FROM asignaturas WHERE anyo=#[message.inboundProperties.'http.query.params'.año]]]></db:parameterized-query>
+					<db:parameterized-query><![CDATA[SELECT * FROM asignaturas WHERE anyo=#[message.inboundProperties.'http.query.params'.anyo]]]></db:parameterized-query>
+
 				</db:select>
 				<choice doc:name="Choice XML-JSON">
 					<when expression="#[flowVars.accept==&quot;application/json&quot;]">
@@ -165,25 +166,25 @@ payload]]></dw:set-payload>
 %output application/json
 ---
 {
-	codigoPostal: payload.codigoPostal,
-	ciudad: payload.ciudad,
-	direccion: payload.direccion
+	"codigoPostal": payload.codigoPostal,
+	"ciudad": payload.ciudad,
+	"direccion": payload.direccion
 }]]></dw:set-payload>
 				</dw:transform-message>
 			</processor-chain>
 		</scatter-gather>
 		<dw:transform-message doc:name="Datos a JSON">
 			<dw:set-payload><![CDATA[%dw 1.0
-%output application/java
+%output application/json
 ---
 
 {
   "Alumno": payload[0],
   "notas": payload[1],
-  "dirección": payload[2]
+  "direccion": payload[2] 
 }]]></dw:set-payload>
 		</dw:transform-message>
-		<choice doc:name="Choice">
+		<choice doc:name="Choice XML-JSON">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
 				<set-payload value="#[payload]" doc:name="Muestra el expediente"/>
 			</when>
@@ -245,7 +246,7 @@ payload]]></dw:set-payload>
   "profesores": payload[2]
 }]]></dw:set-payload>
 		</dw:transform-message>
-		<choice doc:name="Choice">
+		<choice doc:name="Choice XML-JSON">
 			<when expression="#[flowVars.accept==&quot;application/json&quot;]">
 				<set-payload value="#[payload]" doc:name="Muestra datos en JSON"/>
 			</when>
